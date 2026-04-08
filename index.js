@@ -1,29 +1,30 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const sequelize = require('./config/database.js')
+const User = require('./models/User.js')
+const Account = require('./models/Account.js')
+const Transaction = require('./models/Transaction.js')
 
-const sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        dialect: 'postgres',
-        port: process.env.DB_PORT,
-        logging: false
+//  Relaciones
 
-    }
-)
+User.hasMany(Account,{foreignKey: 'userid'});
+Account.belongsTo(User,{foreignKey: 'userid'});
 
-async function correrservidor() {
+Account.hasMany(Transaction,{foreignKey: 'cuenta_origen_id', as: 'enviadas'});
+Account.hasMany(Transaction,{foreignKey: 'cuenta_destino_id', as: 'recibidas'});
+
+Transaction.belongsTo(Account,{foreignKey: 'cuenta_origen_id', as: 'origen'});
+Transaction.belongsTo(Account,{foreignKey: 'cuenta_destino_id', as: 'destino'})
+
+
+async function syncDB() {
     try {
-        await sequelize.authenticate();
-        console.log('conectado a la db');
+        await sequelize.authenticate()
+        console.log('Concexion estableidad')
+        await sequelize.sync({alter:true})
+        console.log('Tablas sincronizadas')
     } catch (error) {
-
-        console.error('no se pudo conectar', error);
+        console.error('Error: ', error)
         
     }
     
 }
-
-correrservidor()
+syncDB()
