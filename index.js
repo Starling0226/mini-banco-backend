@@ -1,30 +1,37 @@
+const express = require('express')
+const app = express()
+app.use(express.json())
+
 const sequelize = require('./config/database.js')
+const userRouter = require('./routes/userRoutes.js')
+
 const User = require('./models/User.js')
 const Account = require('./models/Account.js')
 const Transaction = require('./models/Transaction.js')
 
-//  Relaciones
-
-User.hasMany(Account,{foreignKey: 'userid'});
-Account.belongsTo(User,{foreignKey: 'userid'});
-
-Account.hasMany(Transaction,{foreignKey: 'cuenta_origen_id', as: 'enviadas'});
-Account.hasMany(Transaction,{foreignKey: 'cuenta_destino_id', as: 'recibidas'});
-
-Transaction.belongsTo(Account,{foreignKey: 'cuenta_origen_id', as: 'origen'});
-Transaction.belongsTo(Account,{foreignKey: 'cuenta_destino_id', as: 'destino'})
+require('dotenv').config();
 
 
-async function syncDB() {
+User.hasMany(Account,{foreignKey: 'userId'});
+Account.belongsTo(User,{foreignKey: 'userId'});
+
+app.use('/api/users', userRouter)
+
+const PORT = process.env.PORT || 3000
+
+async function startServer() {
     try {
-        await sequelize.authenticate()
-        console.log('Concexion estableidad')
-        await sequelize.sync({alter:true})
-        console.log('Tablas sincronizadas')
+        await sequelize.sync({ force: true });
+        
+        app.listen(PORT, () => {
+            console.log(`Servidor corriendo en http://localhost:${PORT}`)
+        })
+        
+
     } catch (error) {
         console.error('Error: ', error)
-        
     }
-    
 }
-syncDB()
+
+startServer()
+
