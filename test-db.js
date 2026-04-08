@@ -6,7 +6,7 @@ async function CrearUsuarioPrueva(){
         await sequelize.authenticate()
         const nuevoUsuario = await User.create({
             nombre:'Melvin Starlin',
-            email: 'starlin@gmail.com',
+            email: 'starlin55@gmail.com',
             password: 'Clave2025qr'
         })
 
