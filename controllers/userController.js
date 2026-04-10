@@ -1,6 +1,10 @@
 const User = require('../models/User.js')
 const Account = require('../models/Account.js')
 
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+
+
 exports.register = async (req, res) => {
     try {
         const {nombre, email, password}= req.body
@@ -36,4 +40,29 @@ exports.register = async (req, res) => {
     }
 }
 
+
+exports.login = async (req, res) => {
+    try {
+        const {email, password} = req.body
+        const usuario = await User.findOne({where: { email }})
+        if(!usuario){
+            return res.status(404).json({error: 'Usuario no encontrado'})
+
+        }
+
+        const esValido = await bcrypt.compare(password, usuario.password)
+        if(!esValido){
+            return res.status(401).json({error: 'Contraseña incorrecta'})
+        }
+
+        const token = jwt.sign(
+            {id: usuario.id, email: usuario.email},
+            process.env.JWT_SECRET,
+            {expiresIn: '1h'}
+        )
+
+    } catch (error) {
+        res.status(400).json({error: error.message})
+    }
+}
 
