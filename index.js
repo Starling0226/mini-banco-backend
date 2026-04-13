@@ -4,6 +4,7 @@ app.use(express.json())
 
 const sequelize = require('./config/database.js')
 const userRouter = require('./routes/userRoutes.js')
+const accountRutes = require('./routes/accountRoutes.js')
 
 const User = require('./models/User.js')
 const Account = require('./models/Account.js')
@@ -16,6 +17,8 @@ User.hasMany(Account,{foreignKey: 'userId'});
 Account.belongsTo(User,{foreignKey: 'userId'});
 
 app.use('/api/users', userRouter)
+app.use('/api/accounts', accountRutes)
+
 
 const PORT = process.env.PORT || 3000
 
