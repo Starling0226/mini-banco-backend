@@ -80,3 +80,64 @@ exports.deposit = async (req, res) => {
 
 
 }
+
+exports.transfer = async (req, res) => {
+    const t = await sequelize.transaction()
+
+    try {
+        const {numero_cuenta_destino, monto} = req.body;
+
+        if (!monto || monto <= 0){
+            return res.status(400).json({ error: "Monto invalido"})
+        }
+
+        const cuenta_origen = await Account.findOne({
+            where: {userId: req.usuario.id},
+            transaction: t        
+        })
+
+        if(parseFloat(cuenta_origen.balance)<parseFloat(monto) ){
+            await t. rollback()
+            return res.status(400).json({error: "Saldo insuficiente"})
+        
+        }
+
+        const cuenta_destino = await Account.findOne({
+            where: {numero_cuenta: numero_cuenta_destino},
+            transaction: t
+        })
+
+        if (!cuenta_destino) {
+            await t.rollback()
+            return res.status(400).json({error: "Cuenta destino no encontrada"})
+                   
+        }
+
+        cuenta_origen.balance = parseFloat(cuenta_origen.balance) - parseFloat(monto)
+        cuenta_destino.balance = parseFloat(cuenta_destino.balance) + parseFloat(monto)
+
+        await cuenta_origen.save({transaction: t})
+        await cuenta_destino.save({transaction: t})
+
+        await Transaction.create({
+            monto,
+            tipo: 'transferencia',
+            cuenta_origen_id: cuenta_origen.id,
+            cuenta_destino_id: cuenta_destino.id
+            
+        },{Transaction: t});
+
+        await t.commit()
+
+        res.json({
+            message: 'Transferencia exitosa',
+            balance_origen: cuenta_origen.balance,                  
+        })
+
+
+    } catch (error) {
+        await t.rollback()
+        res.status(500).json({error: error.message})
+    
+    }
+}

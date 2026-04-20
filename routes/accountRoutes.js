@@ -6,6 +6,7 @@ const authMiddleware = require('../middlewares/auth.js')
 
 router.get('/balance',authMiddleware, accountController.getBalance);
 router.post('/deposit',authMiddleware, accountController.deposit);
+router.post('/transfer',authMiddleware, accountController.transfer)
 
 module.exports = router;
 
